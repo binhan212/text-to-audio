@@ -118,9 +118,9 @@
 
             <div>
                 <div class="label"><i class="fas fa-pen"></i>Nội dung cần đọc</div>
-                <textarea id="textInput" class="h-44 resize-y p-4" maxlength="10000"
+                <textarea id="textInput" class="h-44 resize-y p-4" maxlength="100000"
                     placeholder="Nhập nội dung tiếng Việt tại đây..."></textarea>
-                <p class="mt-2 text-right text-sm text-amber-700"><span id="charCount">0</span>/10.000 ký tự</p>
+                <p class="mt-2 text-right text-sm text-amber-700"><span id="charCount">0</span>/100.000 ký tự</p>
             </div>
 
             <div>
@@ -169,7 +169,6 @@
     </main>
 
     <script>
-        const synth = window.speechSynthesis;
         const fileInput = document.getElementById("fileInput");
         const uploadArea = document.getElementById("uploadArea");
         const fileName = document.getElementById("fileName");
@@ -187,8 +186,8 @@
         const downloadBtn = document.getElementById("downloadBtn");
         const statusBox = document.getElementById("status");
 
-        let vietnameseVoices = [];
-        let convertedContent = "";
+        let audioUrl = "";
+        let audioPlayer = null;
 
         function showStatus(message, type = "info") {
             const icon = type === "success" ? "fa-circle-check" :
@@ -197,52 +196,38 @@
             statusBox.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
         }
 
-        function loadVietnameseVoices() {
-            vietnameseVoices = synth.getVoices().filter(
-                voice => voice.lang.toLowerCase().startsWith("vi")
-            );
-            voiceSelect.innerHTML = "";
-
-            if (!vietnameseVoices.length) {
-                voiceSelect.innerHTML = '<option value="">Không tìm thấy giọng tiếng Việt</option>';
-                voiceHint.textContent = "Hãy cài giọng Vietnamese (vi-VN) trong phần ngôn ngữ của hệ điều hành rồi tải lại trang.";
-                convertBtn.disabled = true;
-                return;
-            }
-
-            vietnameseVoices
-                .sort((a, b) => Number(b.default) - Number(a.default))
-                .forEach((voice, index) => {
+        async function loadVietnameseVoices() {
+            try {
+                const response = await fetch("/api/voices");
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                voiceSelect.innerHTML = "";
+                data.voices.forEach((voice, index) => {
                     const option = document.createElement("option");
-                    option.value = voice.name;
-                    option.textContent = `${voice.name} (${voice.lang})${voice.default ? " — mặc định" : ""}`;
-                    if (index === 0) option.selected = true;
+                    option.value = voice.id;
+                    option.textContent = voice.name;
+                    option.selected = index === 0;
                     voiceSelect.appendChild(option);
                 });
-            voiceHint.textContent = `Đã tìm thấy ${vietnameseVoices.length} giọng tiếng Việt trên thiết bị.`;
-            convertBtn.disabled = false;
-        }
-
-        function selectedVoice() {
-            return vietnameseVoices.find(voice => voice.name === voiceSelect.value) || vietnameseVoices[0];
-        }
-
-        function createUtterance(content) {
-            const utterance = new SpeechSynthesisUtterance(content);
-            utterance.lang = "vi-VN";
-            utterance.voice = selectedVoice();
-            utterance.rate = Number(rateInput.value);
-            utterance.pitch = Number(pitchInput.value);
-            utterance.volume = Number(volumeInput.value);
-            return utterance;
+                voiceHint.textContent = "Giọng AI tiếng Việt miễn phí từ Microsoft Edge TTS — không cần cài giọng trên máy.";
+                convertBtn.disabled = false;
+            } catch {
+                voiceSelect.innerHTML = '<option value="">Không kết nối được máy chủ TTS</option>';
+                voiceHint.textContent = "Hãy mở ứng dụng bằng start.bat thay vì mở trực tiếp file index.html.";
+                convertBtn.disabled = true;
+                showStatus("Chưa kết nối được backend. Hãy chạy file start.bat.", "error");
+            }
         }
 
         function resetConversion() {
-            synth.cancel();
-            convertedContent = "";
+            audioPlayer?.pause();
+            audioPlayer = null;
+            if (audioUrl) URL.revokeObjectURL(audioUrl);
+            audioUrl = "";
             convertActions.classList.remove("hidden");
             resultActions.classList.add("hidden");
             resultActions.classList.remove("grid");
+            previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
         }
 
         function readFile(file) {
@@ -252,7 +237,7 @@
             }
             const reader = new FileReader();
             reader.onload = event => {
-                textInput.value = String(event.target.result).slice(0, 10000);
+                textInput.value = String(event.target.result).slice(0, 100000);
                 charCount.textContent = textInput.value.length.toLocaleString("vi-VN");
                 fileName.textContent = `Đã chọn: ${file.name}`;
                 resetConversion();
@@ -289,131 +274,88 @@
         pitchInput.addEventListener("input", () => pitchValue.textContent = Number(pitchInput.value).toFixed(1));
         volumeInput.addEventListener("input", () => volumeValue.textContent = `${Math.round(volumeInput.value * 100)}%`);
 
-        convertBtn.addEventListener("click", () => {
+        convertBtn.addEventListener("click", async () => {
             const content = textInput.value.trim();
             if (!content) {
                 showStatus("Hãy nhập văn bản hoặc chọn một file .txt trước.", "error");
                 textInput.focus();
                 return;
             }
-            if (!selectedVoice()) {
-                showStatus("Thiết bị chưa có giọng đọc tiếng Việt.", "error");
-                return;
-            }
+            convertBtn.disabled = true;
+            convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Đang tạo audio...</span>';
+            const estimatedMinutes = Math.max(1, Math.ceil(content.length / 6000));
+            const startedAt = Date.now();
+            showStatus(`Đang tạo MP3, ước tính khoảng ${estimatedMinutes} phút...`, "info");
+            const progressTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = String(elapsed % 60).padStart(2, "0");
+                showStatus(`Đang tạo MP3 (${minutes}:${seconds}) — vui lòng giữ trang này mở...`, "info");
+            }, 1000);
 
-            convertedContent = content;
-            convertActions.classList.add("hidden");
-            resultActions.classList.remove("hidden");
-            resultActions.classList.add("grid");
-            showStatus("Đã chuyển xong. Bạn có thể nghe trước hoặc tải xuống.", "success");
+            try {
+                const response = await fetch("/api/tts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        text: content,
+                        voice: voiceSelect.value,
+                        rate: Number(rateInput.value),
+                        pitch: Number(pitchInput.value),
+                        volume: Number(volumeInput.value)
+                    })
+                });
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.error || "Không thể tạo audio.");
+                }
+                const audioBlob = await response.blob();
+                audioUrl = URL.createObjectURL(audioBlob);
+                audioPlayer = new Audio(audioUrl);
+                audioPlayer.addEventListener("ended", () => {
+                    previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
+                });
+                convertActions.classList.add("hidden");
+                resultActions.classList.remove("hidden");
+                resultActions.classList.add("grid");
+                showStatus("Đã tạo xong file MP3. Bạn có thể nghe trước hoặc tải xuống.", "success");
+            } catch (error) {
+                showStatus(error.message || "Không thể tạo audio. Hãy thử lại.", "error");
+            } finally {
+                clearInterval(progressTimer);
+                convertBtn.disabled = false;
+                convertBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i><span>Chuyển thành audio</span>';
+            }
         });
 
         previewBtn.addEventListener("click", () => {
-            if (!convertedContent) return;
-            if (synth.speaking) {
-                synth.cancel();
+            if (!audioPlayer) return;
+            if (!audioPlayer.paused) {
+                audioPlayer.pause();
                 previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
                 showStatus("Đã dừng nghe trước.", "info");
                 return;
             }
-            const utterance = createUtterance(convertedContent);
-            utterance.onstart = () => {
+            audioPlayer.play()
+                .then(() => {
                 previewBtn.innerHTML = '<i class="fas fa-stop"></i><span>Dừng nghe</span>';
                 showStatus("Đang phát giọng đọc tiếng Việt...", "info");
-            };
-            utterance.onend = () => {
-                previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
-            };
-            utterance.onerror = () => {
-                previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
-                showStatus("Không thể phát giọng đọc trên trình duyệt này.", "error");
-            };
-            synth.speak(utterance);
+                })
+                .catch(() => showStatus("Không thể phát file audio.", "error"));
         });
 
-        downloadBtn.addEventListener("click", async () => {
-            if (!convertedContent) return;
-            if (!navigator.mediaDevices?.getDisplayMedia || !window.MediaRecorder) {
-                showStatus("Trình duyệt này chưa hỗ trợ xuất audio. Hãy dùng Chrome hoặc Edge phiên bản mới.", "error");
-                return;
-            }
-
-            synth.cancel();
-            downloadBtn.disabled = true;
-            showStatus('Chọn tab hiện tại và bật “Chia sẻ âm thanh của tab” để tạo file tải xuống.', "info");
-
-            let captureStream;
-            try {
-                captureStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: true,
-                    audio: true,
-                    preferCurrentTab: true,
-                    selfBrowserSurface: "include"
-                });
-
-                const audioTracks = captureStream.getAudioTracks();
-                if (!audioTracks.length) {
-                    throw new Error("NO_SHARED_AUDIO");
-                }
-
-                const audioStream = new MediaStream(audioTracks);
-                const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-                    ? "audio/webm;codecs=opus"
-                    : "audio/webm";
-                const recorder = new MediaRecorder(audioStream, { mimeType });
-                const chunks = [];
-
-                recorder.addEventListener("dataavailable", event => {
-                    if (event.data.size) chunks.push(event.data);
-                });
-                recorder.addEventListener("stop", () => {
-                    captureStream.getTracks().forEach(track => track.stop());
-                    if (!chunks.length) {
-                        showStatus("Không thu được âm thanh. Hãy thử lại và nhớ bật chia sẻ âm thanh của tab.", "error");
-                        downloadBtn.disabled = false;
-                        return;
-                    }
-                    const blob = new Blob(chunks, { type: mimeType });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `giong-doc-tieng-viet-${Date.now()}.webm`;
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                    setTimeout(() => URL.revokeObjectURL(url), 1000);
-                    downloadBtn.disabled = false;
-                    showStatus("Đã tạo và tải file audio tiếng Việt.", "success");
-                });
-
-                const utterance = createUtterance(convertedContent);
-                utterance.onend = () => setTimeout(() => {
-                    if (recorder.state !== "inactive") recorder.stop();
-                }, 300);
-                utterance.onerror = () => {
-                    if (recorder.state !== "inactive") recorder.stop();
-                    showStatus("Không thể tạo giọng đọc trên trình duyệt này.", "error");
-                };
-                captureStream.getVideoTracks()[0]?.addEventListener("ended", () => {
-                    synth.cancel();
-                    if (recorder.state !== "inactive") recorder.stop();
-                });
-
-                recorder.start(100);
-                setTimeout(() => synth.speak(utterance), 250);
-                showStatus("Đang tạo audio, vui lòng chờ giọng đọc chạy hết...", "info");
-            } catch (error) {
-                captureStream?.getTracks().forEach(track => track.stop());
-                downloadBtn.disabled = false;
-                const message = error.message === "NO_SHARED_AUDIO"
-                    ? "Bạn chưa bật chia sẻ âm thanh của tab. Hãy nhấn tải lại và bật tùy chọn này."
-                    : "Đã hủy tạo file audio hoặc trình duyệt không cấp quyền chia sẻ tab.";
-                showStatus(message, "error");
-            }
+        downloadBtn.addEventListener("click", () => {
+            if (!audioUrl) return;
+            const link = document.createElement("a");
+            link.href = audioUrl;
+            link.download = `giong-doc-tieng-viet-${Date.now()}.mp3`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            showStatus("Đã tải file MP3.", "success");
         });
 
         loadVietnameseVoices();
-        if ("onvoiceschanged" in synth) synth.onvoiceschanged = loadVietnameseVoices;
     </script>
 </body>
 </html>
