@@ -3,865 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đọc Văn Bản - Text to Speech</title>
+    <title>Chuyển văn bản thành giọng nói tiếng Việt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            scroll-behavior: smooth;
-        }
-
         body {
-            background: linear-gradient(135deg, #faf5f0 0%, #f5ede5 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .warm-card {
-            background: linear-gradient(135deg, #fffbf7 0%, #fef8f3 100%);
-            border: 1px solid rgba(210, 180, 140, 0.3);
-            box-shadow: 0 10px 40px rgba(139, 90, 43, 0.08);
-        }
-
-        .warm-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .warm-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .warm-btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #d4a574 0%, #c89968 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #c89968 0%, #b88856 100%);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #a8d5a8 0%, #92c692 100%);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: linear-gradient(135deg, #92c692 0%, #7cb97c 100%);
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, #f4d4a8 0%, #ecc896 100%);
+            min-height: 100vh;
+            background: linear-gradient(135deg, #faf5f0, #f5ede5);
             color: #5c4033;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        .btn-warning:hover {
-            background: linear-gradient(135deg, #ecc896 0%, #e4c284 100%);
+        .card {
+            background: linear-gradient(135deg, #fffbf7, #fef8f3);
+            border: 1px solid rgba(210, 180, 140, .35);
+            box-shadow: 0 10px 40px rgba(139, 90, 43, .08);
         }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #e8a8a8 0%, #e09696 100%);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #e09696 0%, #d88484 100%);
-        }
-
-        .btn-info {
-            background: linear-gradient(135deg, #a8d4e8 0%, #92c6e0 100%);
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: linear-gradient(135deg, #92c6e0 0%, #7cb8d8 100%);
-        }
-
-        .warm-input {
-            background: linear-gradient(135deg, #fffbf7 0%, #fef8f3 100%);
-            border: 2px solid rgba(210, 180, 140, 0.4);
-            border-radius: 12px;
-            transition: all 0.3s ease;
+        .label {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: .65rem;
             color: #5c4033;
+            font-weight: 650;
         }
-
-        .warm-input:focus {
-            outline: none;
-            border-color: #d4a574;
-            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
-            background: #fffbf7;
-        }
-
-        .warm-input::placeholder {
-            color: rgba(92, 64, 51, 0.5);
-        }
-
-        .warm-textarea {
-            background: linear-gradient(135deg, #fffbf7 0%, #fef8f3 100%);
-            border: 2px solid rgba(210, 180, 140, 0.4);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            color: #5c4033;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .warm-textarea:focus {
-            outline: none;
-            border-color: #d4a574;
-            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
-            background: #fffbf7;
-        }
-
-        .warm-textarea::placeholder {
-            color: rgba(92, 64, 51, 0.5);
-        }
-
-        .voice-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding: 12px;
-            background: linear-gradient(135deg, #fffbf7 0%, #fef8f3 100%);
-            border: 2px solid rgba(210, 180, 140, 0.4);
-            border-radius: 12px;
-        }
-
-        .voice-option {
-            padding: 12px;
-            border: 2px solid rgba(212, 165, 116, 0.3);
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .label i { color: #c89968; }
+        .upload {
+            padding: 1.4rem;
+            border: 2px dashed rgba(200, 153, 104, .45);
+            border-radius: .9rem;
+            background: rgba(255, 255, 255, .45);
             text-align: center;
-            font-size: 14px;
-            color: #5c4033;
-            font-weight: 500;
+            cursor: pointer;
+            transition: .2s ease;
         }
-
-        .voice-option:hover {
-            border-color: #d4a574;
-            background: rgba(212, 165, 116, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .voice-option.selected {
-            background: linear-gradient(135deg, #d4a574 0%, #c89968 100%);
-            color: white;
+        .upload:hover, .upload.dragover {
             border-color: #c89968;
-            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+            background: rgba(212, 165, 116, .1);
         }
-
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .warm-slider {
-            flex: 1;
-            height: 6px;
-            border-radius: 3px;
-            background: linear-gradient(90deg, rgba(212, 165, 116, 0.2) 0%, rgba(212, 165, 116, 0.4) 100%);
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .warm-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #d4a574 0%, #c89968 100%);
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(212, 165, 116, 0.4);
-            transition: all 0.2s ease;
-        }
-
-        .warm-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.6);
-        }
-
-        .warm-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #d4a574 0%, #c89968 100%);
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 8px rgba(212, 165, 116, 0.4);
-            transition: all 0.2s ease;
-        }
-
-        .warm-slider::-moz-range-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.6);
-        }
-
-        .label-warm {
+        textarea, select {
+            width: 100%;
+            border: 2px solid rgba(210, 180, 140, .4);
+            border-radius: .8rem;
+            background: #fffbf7;
             color: #5c4033;
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
+            outline: none;
         }
-
-        .label-warm i {
-            color: #d4a574;
-            font-size: 16px;
-        }
-
-        .value-badge {
-            background: linear-gradient(135deg, #d4a574 0%, #c89968 100%);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        .status-message {
-            padding: 14px 16px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .status-success {
-            background: linear-gradient(135deg, rgba(168, 213, 168, 0.2) 0%, rgba(146, 198, 146, 0.2) 100%);
-            border: 1px solid rgba(168, 213, 168, 0.5);
-            color: #2d5a2d;
-        }
-
-        .status-error {
-            background: linear-gradient(135deg, rgba(232, 168, 168, 0.2) 0%, rgba(224, 150, 150, 0.2) 100%);
-            border: 1px solid rgba(232, 168, 168, 0.5);
-            color: #5c2d2d;
-        }
-
-        .status-info {
-            background: linear-gradient(135deg, rgba(168, 212, 232, 0.2) 0%, rgba(146, 198, 224, 0.2) 100%);
-            border: 1px solid rgba(168, 212, 232, 0.5);
-            color: #2d4a5c;
-        }
-
-        .file-upload-area {
-            border: 2px dashed rgba(212, 165, 116, 0.4);
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, rgba(255, 251, 247, 0.5) 0%, rgba(254, 248, 243, 0.5) 100%);
-        }
-
-        .file-upload-area:hover {
+        textarea:focus, select:focus {
             border-color: #d4a574;
-            background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(200, 153, 104, 0.1) 100%);
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, .12);
         }
-
-        .file-upload-area.dragover {
-            border-color: #d4a574;
-            background: linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, rgba(200, 153, 104, 0.15) 100%);
-            transform: scale(1.02);
-        }
-
-        .progress-bar-container {
-            background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(200, 153, 104, 0.1) 100%);
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid rgba(212, 165, 116, 0.3);
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: linear-gradient(90deg, #d4a574 0%, #c89968 100%);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-
-        .control-section {
-            background: linear-gradient(135deg, rgba(212, 165, 116, 0.05) 0%, rgba(200, 153, 104, 0.05) 100%);
-            border: 1px solid rgba(212, 165, 116, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .button-group {
+        .settings {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid rgba(210, 180, 140, .3);
+            border-radius: .8rem;
+            background: rgba(212, 165, 116, .05);
         }
-
-        .button-group-vertical {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .button-group {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .icon-wrapper {
+        input[type="range"] { width: 100%; accent-color: #c89968; }
+        .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: rgba(212, 165, 116, 0.15);
-            border-radius: 8px;
-            color: #d4a574;
-            margin-right: 8px;
+            gap: .55rem;
+            width: 100%;
+            padding: .85rem 1rem;
+            border-radius: .8rem;
+            color: white;
+            font-weight: 700;
+            transition: .2s ease;
         }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
+        .btn:hover { transform: translateY(-1px); filter: brightness(.96); }
+        .btn:disabled { cursor: not-allowed; opacity: .6; transform: none; }
+        .btn-convert { background: linear-gradient(135deg, #d4a574, #b88856); }
+        .btn-preview { background: linear-gradient(135deg, #86bc86, #67a767); }
+        .btn-download { background: linear-gradient(135deg, #75b6d5, #559fc3); }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .85rem 1rem;
+            border-radius: .75rem;
+            font-weight: 550;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .char-count {
-            font-size: 13px;
-            color: #8b6f47;
-            font-weight: 500;
-        }
-
-        .info-box {
-            background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(200, 153, 104, 0.1) 100%);
-            border-left: 4px solid #d4a574;
-            border-radius: 8px;
-            padding: 14px;
-            color: #5c4033;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .info-box i {
-            color: #d4a574;
-            margin-right: 8px;
+        .status.info { color: #2d4a5c; background: #e8f4f9; }
+        .status.success { color: #2d5a2d; background: #eaf5ea; }
+        .status.error { color: #752f2f; background: #f9e8e8; }
+        @media (max-width: 640px) {
+            .settings { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-<body class="min-h-screen py-8 px-4">
-
-<div class="max-w-3xl mx-auto fade-in">
-    <!-- Header -->
-    <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full mb-4 shadow-lg">
-            <i class="fas fa-volume-up text-3xl text-amber-700"></i>
-        </div>
-        <h1 class="text-4xl font-bold text-amber-900 mb-2">Đọc Văn Bản</h1>
-        <p class="text-amber-700 text-lg">Chuyển đổi văn bản thành giọng nói một cách dễ dàng</p>
-    </div>
-
-    <!-- Main Card -->
-    <div class="warm-card rounded-3xl p-8 mb-6">
-
-        <!-- File Upload Section -->
-        <div class="mb-8">
-            <div class="label-warm">
-                <i class="fas fa-file-upload"></i>Tải file văn bản
+<body class="px-4 py-8">
+    <main class="mx-auto max-w-3xl">
+        <header class="mb-8 text-center">
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 shadow">
+                <i class="fas fa-volume-high text-3xl text-amber-700"></i>
             </div>
-            <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" accept=".txt" class="hidden">
-                <div class="mb-3">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-amber-600 mb-3 block"></i>
-                </div>
-                <p class="text-amber-900 font-semibold mb-1">Kéo thả file .txt hoặc nhấn để chọn</p>
-                <p class="text-amber-700 text-sm">Hỗ trợ file .txt</p>
-            </div>
-            <p id="fileName" class="text-sm mt-3 text-amber-700"></p>
-        </div>
+            <h1 class="mb-2 text-3xl font-bold text-amber-950 sm:text-4xl">Giọng đọc tiếng Việt</h1>
+            <p class="text-amber-800">Chuyển văn bản hoặc file .txt thành audio tiếng Việt</p>
+        </header>
 
-        <!-- Text Input Section -->
-        <div class="mb-8">
-            <div class="label-warm">
-                <i class="fas fa-pen-fancy"></i>Văn bản cần đọc
-            </div>
-            <textarea id="textInput" 
-                      placeholder="Nhập văn bản hoặc tải file .txt..."
-                      class="warm-textarea w-full h-40 p-4 resize-none"></textarea>
-            <div class="flex justify-between items-center mt-2">
-                <p class="char-count"><span id="charCount">0</span> ký tự</p>
-            </div>
-        </div>
-
-        <!-- Voice Selection Section -->
-        <div class="mb-8">
-            <div class="label-warm">
-                <i class="fas fa-microphone"></i>Chọn giọng đọc
-            </div>
-            <div class="voice-selector" id="voiceSelector"></div>
-        </div>
-
-        <!-- Control Section -->
-        <div class="control-section mb-8">
-            <div class="space-y-6">
-                <!-- Speed Control -->
-                <div>
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="label-warm mb-0">
-                            <i class="fas fa-tachometer-alt"></i>Tốc độ đọc
-                        </label>
-                        <span class="value-badge" id="rateValue">1.0x</span>
-                    </div>
-                    <div class="slider-container">
-                        <span class="text-sm text-amber-700 font-semibold">0.5x</span>
-                        <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1" class="warm-slider">
-                        <span class="text-sm text-amber-700 font-semibold">2.0x</span>
-                    </div>
-                </div>
-
-                <!-- Pitch Control -->
-                <div>
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="label-warm mb-0">
-                            <i class="fas fa-music"></i>Cao độ giọng
-                        </label>
-                        <span class="value-badge" id="pitchValue">1.0</span>
-                    </div>
-                    <div class="slider-container">
-                        <span class="text-sm text-amber-700 font-semibold">Thấp</span>
-                        <input type="range" id="pitch" min="0.5" max="2" value="1" step="0.1" class="warm-slider">
-                        <span class="text-sm text-amber-700 font-semibold">Cao</span>
-                    </div>
-                </div>
-
-                <!-- Volume Control -->
-                <div>
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="label-warm mb-0">
-                            <i class="fas fa-volume-up"></i>Âm lượng
-                        </label>
-                        <span class="value-badge" id="volumeValue">100%</span>
-                    </div>
-                    <div class="slider-container">
-                        <span class="text-sm text-amber-700 font-semibold">0%</span>
-                        <input type="range" id="volume" min="0" max="1" value="1" step="0.1" class="warm-slider">
-                        <span class="text-sm text-amber-700 font-semibold">100%</span>
-                    </div>
+        <section class="card space-y-7 rounded-3xl p-5 sm:p-8">
+            <div>
+                <div class="label"><i class="fas fa-file-arrow-up"></i>File văn bản</div>
+                <div id="uploadArea" class="upload" role="button" tabindex="0">
+                    <input id="fileInput" class="hidden" type="file" accept=".txt,text/plain">
+                    <i class="fas fa-cloud-arrow-up mb-3 text-4xl text-amber-600"></i>
+                    <p class="font-semibold text-amber-950">Kéo thả file .txt hoặc nhấn để chọn</p>
+                    <p id="fileName" class="mt-1 text-sm text-amber-700">Tối đa 1 file văn bản</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Status Message -->
-        <div id="statusBox" class="status-message hidden mb-6"></div>
-
-        <!-- Progress Bar -->
-        <div id="progressContainer" class="progress-bar-container hidden mb-6">
-            <div class="flex justify-between mb-2">
-                <span class="text-sm font-semibold text-amber-900">Tiến độ</span>
-                <span id="progressText" class="text-sm font-semibold text-amber-700">0%</span>
+            <div>
+                <div class="label"><i class="fas fa-pen"></i>Nội dung cần đọc</div>
+                <textarea id="textInput" class="h-44 resize-y p-4" maxlength="10000"
+                    placeholder="Nhập nội dung tiếng Việt tại đây..."></textarea>
+                <p class="mt-2 text-right text-sm text-amber-700"><span id="charCount">0</span>/10.000 ký tự</p>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                <div id="progressBar" class="progress-bar transition-all" style="width: 0%"></div>
+
+            <div>
+                <label class="label" for="voiceSelect"><i class="fas fa-microphone"></i>Giọng tiếng Việt</label>
+                <select id="voiceSelect" class="p-3">
+                    <option value="">Đang tìm giọng tiếng Việt trên thiết bị...</option>
+                </select>
+                <p id="voiceHint" class="mt-2 text-sm text-amber-700"></p>
             </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="mb-6">
-            <div class="label-warm mb-4">
-                <i class="fas fa-play-circle"></i>Điều khiển
+            <div class="settings">
+                <label>
+                    <span class="mb-2 flex justify-between text-sm font-semibold">Tốc độ <b id="rateValue">1.0x</b></span>
+                    <input id="rate" type="range" min="0.5" max="2" value="1" step="0.1">
+                </label>
+                <label>
+                    <span class="mb-2 flex justify-between text-sm font-semibold">Cao độ <b id="pitchValue">1.0</b></span>
+                    <input id="pitch" type="range" min="0.5" max="2" value="1" step="0.1">
+                </label>
+                <label>
+                    <span class="mb-2 flex justify-between text-sm font-semibold">Âm lượng <b id="volumeValue">100%</b></span>
+                    <input id="volume" type="range" min="0" max="1" value="1" step="0.1">
+                </label>
             </div>
-            <div class="button-group">
-                <button id="playBtn" class="warm-btn btn-success py-3 px-4 flex items-center justify-center gap-2">
-                    <i class="fas fa-play"></i>Đọc
-                </button>
-                <button id="pauseBtn" class="warm-btn btn-warning py-3 px-4 flex items-center justify-center gap-2">
-                    <i class="fas fa-pause"></i>Tạm dừng
-                </button>
-                <button id="stopBtn" class="warm-btn btn-danger py-3 px-4 flex items-center justify-center gap-2">
-                    <i class="fas fa-stop"></i>Dừng
-                </button>
-                <button id="downloadBtn" class="warm-btn btn-info py-3 px-4 flex items-center justify-center gap-2">
-                    <i class="fas fa-download"></i>Tải âm thanh
+
+            <div id="status" class="status info hidden" role="status" aria-live="polite"></div>
+
+            <div id="convertActions">
+                <button id="convertBtn" class="btn btn-convert">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    <span>Chuyển thành audio</span>
                 </button>
             </div>
-        </div>
 
-        <!-- Info Box -->
-        <div class="info-box">
-            <i class="fas fa-lightbulb"></i>
-            <strong>Mẹo:</strong> Tải file .txt để đọc nội dung nhanh chóng. Điều chỉnh tốc độ, cao độ và âm lượng theo ý thích. Nhấn "Tải âm thanh" để lưu file audio về máy.
-        </div>
-    </div>
-</div>
+            <div id="resultActions" class="hidden grid-cols-1 gap-3 sm:grid-cols-2">
+                <button id="previewBtn" class="btn btn-preview">
+                    <i class="fas fa-play"></i>
+                    <span>Nghe trước</span>
+                </button>
+                <button id="downloadBtn" class="btn btn-download">
+                    <i class="fas fa-download"></i>
+                    <span>Tải xuống</span>
+                </button>
+            </div>
+        </section>
+    </main>
 
-<script>
-    const synth = window.speechSynthesis;
-    const textInput = document.getElementById('textInput');
-    const fileInput = document.getElementById('fileInput');
-    const voiceSelector = document.getElementById('voiceSelector');
-    const rateInput = document.getElementById('rate');
-    const pitchInput = document.getElementById('pitch');
-    const volumeInput = document.getElementById('volume');
-    const rateValue = document.getElementById('rateValue');
-    const pitchValue = document.getElementById('pitchValue');
-    const volumeValue = document.getElementById('volumeValue');
-    const charCount = document.getElementById('charCount');
-    const playBtn = document.getElementById('playBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const statusBox = document.getElementById('statusBox');
-    const fileName = document.getElementById('fileName');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
+    <script>
+        const synth = window.speechSynthesis;
+        const fileInput = document.getElementById("fileInput");
+        const uploadArea = document.getElementById("uploadArea");
+        const fileName = document.getElementById("fileName");
+        const textInput = document.getElementById("textInput");
+        const charCount = document.getElementById("charCount");
+        const voiceSelect = document.getElementById("voiceSelect");
+        const voiceHint = document.getElementById("voiceHint");
+        const rateInput = document.getElementById("rate");
+        const pitchInput = document.getElementById("pitch");
+        const volumeInput = document.getElementById("volume");
+        const convertBtn = document.getElementById("convertBtn");
+        const convertActions = document.getElementById("convertActions");
+        const resultActions = document.getElementById("resultActions");
+        const previewBtn = document.getElementById("previewBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
+        const statusBox = document.getElementById("status");
 
-    let voices = [];
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
-    let isPaused = false;
-    let selectedVoiceName = null;
+        let vietnameseVoices = [];
+        let convertedContent = "";
 
-    // Populate voices
-    function populateVoiceList() {
-        voices = synth.getVoices();
-        
-        // Separate Vietnamese and English voices
-        const vietnameseVoices = voices.filter(voice => voice.lang.includes('vi'));
-        const englishVoices = voices.filter(voice => voice.lang.includes('en'));
-        const otherVoices = voices.filter(voice => !voice.lang.includes('vi') && !voice.lang.includes('en'));
-
-        voiceSelector.innerHTML = '';
-
-        // Add Vietnamese voices first
-        vietnameseVoices.forEach((voice) => {
-            const option = createVoiceOption(voice);
-            voiceSelector.appendChild(option);
-        });
-
-        // Add separator
-        if (vietnameseVoices.length > 0 && englishVoices.length > 0) {
-            const separator = document.createElement('div');
-            separator.className = 'col-span-full h-px bg-amber-200 my-2';
-            voiceSelector.appendChild(separator);
+        function showStatus(message, type = "info") {
+            const icon = type === "success" ? "fa-circle-check" :
+                type === "error" ? "fa-circle-exclamation" : "fa-circle-info";
+            statusBox.className = `status ${type}`;
+            statusBox.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
         }
 
-        // Add English voices
-        englishVoices.forEach((voice) => {
-            const option = createVoiceOption(voice);
-            voiceSelector.appendChild(option);
-        });
+        function loadVietnameseVoices() {
+            vietnameseVoices = synth.getVoices().filter(
+                voice => voice.lang.toLowerCase().startsWith("vi")
+            );
+            voiceSelect.innerHTML = "";
 
-        // Add other voices if needed
-        if (otherVoices.length > 0 && (vietnameseVoices.length === 0 && englishVoices.length === 0)) {
-            otherVoices.forEach((voice) => {
-                const option = createVoiceOption(voice);
-                voiceSelector.appendChild(option);
-            });
-        }
-
-        // Select first voice by default
-        if (voiceSelector.children.length > 0) {
-            const firstOption = voiceSelector.querySelector('.voice-option');
-            if (firstOption) {
-                firstOption.click();
+            if (!vietnameseVoices.length) {
+                voiceSelect.innerHTML = '<option value="">Không tìm thấy giọng tiếng Việt</option>';
+                voiceHint.textContent = "Hãy cài giọng Vietnamese (vi-VN) trong phần ngôn ngữ của hệ điều hành rồi tải lại trang.";
+                convertBtn.disabled = true;
+                return;
             }
-        }
-    }
 
-    function createVoiceOption(voice) {
-        const option = document.createElement('button');
-        option.type = 'button';
-        option.className = 'voice-option';
-        option.setAttribute('data-name', voice.name);
-        option.textContent = `${voice.name.split(' ')[0]}\n(${voice.lang})`;
-        option.onclick = (e) => {
-            e.preventDefault();
-            selectVoice(option, voice.name);
-        };
-        return option;
-    }
-
-    function selectVoice(element, voiceName) {
-        document.querySelectorAll('.voice-option').forEach(opt => opt.classList.remove('selected'));
-        element.classList.add('selected');
-        selectedVoiceName = voiceName;
-    }
-
-    populateVoiceList();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = populateVoiceList;
-    }
-
-    // File upload handler
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file && file.type === 'text/plain') {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                textInput.value = event.target.result;
-                charCount.textContent = textInput.value.length;
-                fileName.textContent = `✓ Đã tải: ${file.name}`;
-                fileName.classList.remove('text-red-600');
-                fileName.classList.add('text-green-600');
-                showStatus(`Tải file thành công: ${file.name}`, 'success');
-            };
-            reader.readAsText(file);
-        } else {
-            fileName.textContent = '✗ Vui lòng chọn file .txt';
-            fileName.classList.add('text-red-600');
-            showStatus('Chỉ hỗ trợ file .txt', 'error');
-        }
-    });
-
-    // Drag and drop
-    const fileUploadArea = document.querySelector('.file-upload-area');
-    
-    fileUploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        fileUploadArea.classList.add('dragover');
-    });
-
-    fileUploadArea.addEventListener('dragleave', (e) => {
-        fileUploadArea.classList.remove('dragover');
-    });
-
-    fileUploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        fileUploadArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            fileInput.dispatchEvent(new Event('change'));
-        }
-    });
-
-    // Update character count
-    textInput.addEventListener('input', () => {
-        charCount.textContent = textInput.value.length;
-    });
-
-    // Update display values
-    rateInput.oninput = () => {
-        rateValue.textContent = rateInput.value + 'x';
-    };
-
-    pitchInput.oninput = () => {
-        pitchValue.textContent = pitchInput.value;
-    };
-
-    volumeInput.oninput = () => {
-        volumeValue.textContent = Math.round(volumeInput.value * 100) + '%';
-    };
-
-    // Show status message
-    function showStatus(message, type = 'info') {
-        statusBox.className = 'status-message';
-        statusBox.classList.remove('hidden');
-        
-        let icon = 'fa-info-circle';
-        if (type === 'success') {
-            statusBox.classList.add('status-success');
-            icon = 'fa-check-circle';
-        } else if (type === 'error') {
-            statusBox.classList.add('status-error');
-            icon = 'fa-exclamation-circle';
-        } else {
-            statusBox.classList.add('status-info');
-        }
-        
-        statusBox.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
-
-        setTimeout(() => {
-            statusBox.classList.add('hidden');
-        }, 4000);
-    }
-
-    // Play button
-    playBtn.onclick = () => {
-        if (synth.speaking && !isPaused) {
-            showStatus('Đang đọc rồi...', 'info');
-            return;
-        }
-
-        if (isPaused) {
-            synth.resume();
-            isPaused = false;
-            showStatus('Tiếp tục đọc...', 'success');
-            return;
-        }
-
-        if (textInput.value.trim() === '') {
-            showStatus('Vui lòng nhập văn bản', 'error');
-            return;
-        }
-
-        audioChunks = [];
-        isRecording = true;
-        progressContainer.classList.remove('hidden');
-        progressBar.style.width = '0%';
-        progressText.textContent = '0%';
-
-        const utterThis = new SpeechSynthesisUtterance(textInput.value);
-        
-        for (let i = 0; i < voices.length; i++) {
-            if (voices[i].name === selectedVoiceName) {
-                utterThis.voice = voices[i];
-                break;
-            }
-        }
-        
-        utterThis.rate = parseFloat(rateInput.value);
-        utterThis.pitch = parseFloat(pitchInput.value);
-        utterThis.volume = parseFloat(volumeInput.value);
-
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            if (progress < 90) {
-                progress += Math.random() * 30;
-                progressBar.style.width = Math.min(progress, 90) + '%';
-                progressText.textContent = Math.round(Math.min(progress, 90)) + '%';
-            }
-        }, 100);
-
-        utterThis.onend = () => {
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            progressText.textContent = '100%';
-            isRecording = false;
-            showStatus('Đã hoàn thành đọc văn bản!', 'success');
-            setTimeout(() => {
-                progressContainer.classList.add('hidden');
-            }, 2000);
-        };
-
-        utterThis.onerror = (event) => {
-            clearInterval(progressInterval);
-            showStatus('Lỗi: ' + event.error, 'error');
-            isRecording = false;
-        };
-
-        synth.speak(utterThis);
-        showStatus('Đang đọc văn bản...', 'info');
-    };
-
-    // Pause button
-    pauseBtn.onclick = () => {
-        if (synth.speaking && !isPaused) {
-            synth.pause();
-            isPaused = true;
-            showStatus('Tạm dừng đọc', 'info');
-        } else if (isPaused) {
-            synth.resume();
-            isPaused = false;
-            showStatus('Tiếp tục đọc', 'info');
-        }
-    };
-
-    // Stop button
-    stopBtn.onclick = () => {
-        synth.cancel();
-        isPaused = false;
-        isRecording = false;
-        progressContainer.classList.add('hidden');
-        showStatus('Đã dừng đọc', 'info');
-    };
-
-    // Download button
-    downloadBtn.onclick = () => {
-        if (textInput.value.trim() === '') {
-            showStatus('Vui lòng nhập văn bản để tải', 'error');
-            return;
-        }
-
-        showStatus('Đang chuẩn bị tải file...', 'info');
-        
-        const utterThis = new SpeechSynthesisUtterance(textInput.value);
-        
-        for (let i = 0; i < voices.length; i++) {
-            if (voices[i].name === selectedVoiceName) {
-                utterThis.voice = voices[i];
-                break;
-            }
-        }
-        
-        utterThis.rate = parseFloat(rateInput.value);
-        utterThis.pitch = parseFloat(pitchInput.value);
-        utterThis.volume = parseFloat(volumeInput.value);
-
-        try {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-
-                    mediaRecorder.ondataavailable = (event) => {
-                        audioChunks.push(event.data);
-                    };
-
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const url = URL.createObjectURL(audioBlob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `audio_${new Date().getTime()}.webm`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        stream.getTracks().forEach(track => track.stop());
-                        showStatus('Đã tải file audio thành công!', 'success');
-                    };
-
-                    mediaRecorder.start();
-                    synth.speak(utterThis);
-                    showStatus('Đang ghi âm...', 'info');
-
-                    utterThis.onend = () => {
-                        mediaRecorder.stop();
-                    };
-                })
-                .catch(err => {
-                    showStatus('Không thể truy cập microphone. Vui lòng cho phép quyền truy cập.', 'error');
-                    console.error('Microphone error:', err);
+            vietnameseVoices
+                .sort((a, b) => Number(b.default) - Number(a.default))
+                .forEach((voice, index) => {
+                    const option = document.createElement("option");
+                    option.value = voice.name;
+                    option.textContent = `${voice.name} (${voice.lang})${voice.default ? " — mặc định" : ""}`;
+                    if (index === 0) option.selected = true;
+                    voiceSelect.appendChild(option);
                 });
-        } catch (error) {
-            showStatus('Trình duyệt của bạn không hỗ trợ ghi âm. Vui lòng sử dụng Chrome, Edge hoặc Firefox.', 'error');
-            console.error('Recording error:', error);
+            voiceHint.textContent = `Đã tìm thấy ${vietnameseVoices.length} giọng tiếng Việt trên thiết bị.`;
+            convertBtn.disabled = false;
         }
-    };
-</script>
 
+        function selectedVoice() {
+            return vietnameseVoices.find(voice => voice.name === voiceSelect.value) || vietnameseVoices[0];
+        }
+
+        function createUtterance(content) {
+            const utterance = new SpeechSynthesisUtterance(content);
+            utterance.lang = "vi-VN";
+            utterance.voice = selectedVoice();
+            utterance.rate = Number(rateInput.value);
+            utterance.pitch = Number(pitchInput.value);
+            utterance.volume = Number(volumeInput.value);
+            return utterance;
+        }
+
+        function resetConversion() {
+            synth.cancel();
+            convertedContent = "";
+            convertActions.classList.remove("hidden");
+            resultActions.classList.add("hidden");
+            resultActions.classList.remove("grid");
+        }
+
+        function readFile(file) {
+            if (!file || (!file.name.toLowerCase().endsWith(".txt") && file.type !== "text/plain")) {
+                showStatus("Vui lòng chọn đúng file .txt.", "error");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = event => {
+                textInput.value = String(event.target.result).slice(0, 10000);
+                charCount.textContent = textInput.value.length.toLocaleString("vi-VN");
+                fileName.textContent = `Đã chọn: ${file.name}`;
+                resetConversion();
+                showStatus("Đã đọc nội dung từ file thành công.", "success");
+            };
+            reader.onerror = () => showStatus("Không thể đọc file này.", "error");
+            reader.readAsText(file, "UTF-8");
+        }
+
+        uploadArea.addEventListener("click", () => fileInput.click());
+        uploadArea.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") fileInput.click();
+        });
+        fileInput.addEventListener("change", () => readFile(fileInput.files[0]));
+        uploadArea.addEventListener("dragover", event => {
+            event.preventDefault();
+            uploadArea.classList.add("dragover");
+        });
+        uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+        uploadArea.addEventListener("drop", event => {
+            event.preventDefault();
+            uploadArea.classList.remove("dragover");
+            readFile(event.dataTransfer.files[0]);
+        });
+
+        textInput.addEventListener("input", () => {
+            charCount.textContent = textInput.value.length.toLocaleString("vi-VN");
+            resetConversion();
+        });
+        [voiceSelect, rateInput, pitchInput, volumeInput].forEach(control => {
+            control.addEventListener("change", resetConversion);
+        });
+        rateInput.addEventListener("input", () => rateValue.textContent = `${Number(rateInput.value).toFixed(1)}x`);
+        pitchInput.addEventListener("input", () => pitchValue.textContent = Number(pitchInput.value).toFixed(1));
+        volumeInput.addEventListener("input", () => volumeValue.textContent = `${Math.round(volumeInput.value * 100)}%`);
+
+        convertBtn.addEventListener("click", () => {
+            const content = textInput.value.trim();
+            if (!content) {
+                showStatus("Hãy nhập văn bản hoặc chọn một file .txt trước.", "error");
+                textInput.focus();
+                return;
+            }
+            if (!selectedVoice()) {
+                showStatus("Thiết bị chưa có giọng đọc tiếng Việt.", "error");
+                return;
+            }
+
+            convertedContent = content;
+            convertActions.classList.add("hidden");
+            resultActions.classList.remove("hidden");
+            resultActions.classList.add("grid");
+            showStatus("Đã chuyển xong. Bạn có thể nghe trước hoặc tải xuống.", "success");
+        });
+
+        previewBtn.addEventListener("click", () => {
+            if (!convertedContent) return;
+            if (synth.speaking) {
+                synth.cancel();
+                previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
+                showStatus("Đã dừng nghe trước.", "info");
+                return;
+            }
+            const utterance = createUtterance(convertedContent);
+            utterance.onstart = () => {
+                previewBtn.innerHTML = '<i class="fas fa-stop"></i><span>Dừng nghe</span>';
+                showStatus("Đang phát giọng đọc tiếng Việt...", "info");
+            };
+            utterance.onend = () => {
+                previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
+            };
+            utterance.onerror = () => {
+                previewBtn.innerHTML = '<i class="fas fa-play"></i><span>Nghe trước</span>';
+                showStatus("Không thể phát giọng đọc trên trình duyệt này.", "error");
+            };
+            synth.speak(utterance);
+        });
+
+        downloadBtn.addEventListener("click", async () => {
+            if (!convertedContent) return;
+            if (!navigator.mediaDevices?.getDisplayMedia || !window.MediaRecorder) {
+                showStatus("Trình duyệt này chưa hỗ trợ xuất audio. Hãy dùng Chrome hoặc Edge phiên bản mới.", "error");
+                return;
+            }
+
+            synth.cancel();
+            downloadBtn.disabled = true;
+            showStatus('Chọn tab hiện tại và bật “Chia sẻ âm thanh của tab” để tạo file tải xuống.', "info");
+
+            let captureStream;
+            try {
+                captureStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true,
+                    preferCurrentTab: true,
+                    selfBrowserSurface: "include"
+                });
+
+                const audioTracks = captureStream.getAudioTracks();
+                if (!audioTracks.length) {
+                    throw new Error("NO_SHARED_AUDIO");
+                }
+
+                const audioStream = new MediaStream(audioTracks);
+                const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+                    ? "audio/webm;codecs=opus"
+                    : "audio/webm";
+                const recorder = new MediaRecorder(audioStream, { mimeType });
+                const chunks = [];
+
+                recorder.addEventListener("dataavailable", event => {
+                    if (event.data.size) chunks.push(event.data);
+                });
+                recorder.addEventListener("stop", () => {
+                    captureStream.getTracks().forEach(track => track.stop());
+                    if (!chunks.length) {
+                        showStatus("Không thu được âm thanh. Hãy thử lại và nhớ bật chia sẻ âm thanh của tab.", "error");
+                        downloadBtn.disabled = false;
+                        return;
+                    }
+                    const blob = new Blob(chunks, { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `giong-doc-tieng-viet-${Date.now()}.webm`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    downloadBtn.disabled = false;
+                    showStatus("Đã tạo và tải file audio tiếng Việt.", "success");
+                });
+
+                const utterance = createUtterance(convertedContent);
+                utterance.onend = () => setTimeout(() => {
+                    if (recorder.state !== "inactive") recorder.stop();
+                }, 300);
+                utterance.onerror = () => {
+                    if (recorder.state !== "inactive") recorder.stop();
+                    showStatus("Không thể tạo giọng đọc trên trình duyệt này.", "error");
+                };
+                captureStream.getVideoTracks()[0]?.addEventListener("ended", () => {
+                    synth.cancel();
+                    if (recorder.state !== "inactive") recorder.stop();
+                });
+
+                recorder.start(100);
+                setTimeout(() => synth.speak(utterance), 250);
+                showStatus("Đang tạo audio, vui lòng chờ giọng đọc chạy hết...", "info");
+            } catch (error) {
+                captureStream?.getTracks().forEach(track => track.stop());
+                downloadBtn.disabled = false;
+                const message = error.message === "NO_SHARED_AUDIO"
+                    ? "Bạn chưa bật chia sẻ âm thanh của tab. Hãy nhấn tải lại và bật tùy chọn này."
+                    : "Đã hủy tạo file audio hoặc trình duyệt không cấp quyền chia sẻ tab.";
+                showStatus(message, "error");
+            }
+        });
+
+        loadVietnameseVoices();
+        if ("onvoiceschanged" in synth) synth.onvoiceschanged = loadVietnameseVoices;
+    </script>
 </body>
 </html>
